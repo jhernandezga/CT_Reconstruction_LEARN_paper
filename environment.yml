@@ -1,0 +1,40 @@
+# mamba env create -f environment.yml --force
+# mamba env create -f environment.yml --force
+name: fastCT
+channels:
+  - pytorch
+  - nvidia
+  - conda-forge
+  - astra-toolbox/label/dev
+dependencies:
+  - python
+  - pytorch::pytorch 
+  - pytorch::torchvision
+  - pytorch-cuda=11.8
+  - pytorch-lightning==2.0.7   
+  - tensorboard
+  - wandb
+  - conda  
+  - astra-toolbox  
+  - numpy
+  - h5py
+  - scikit-image
+  - pydicom=2.4.2
+  - einops=0.6.1
+  - pyfftw=0.12.0
+  - hydra-core=1.2.0 
+  - Pillow
+  - timm  
+  - rich
+  - pkg-config
+  - loguru
+  - matplotlib  
+  - pip
+  - pip: 
+      - colorlog==6.7.0
+      - future==0.18.3
+      - hydra-colorlog==1.2.0
+      - git+https://github.com/odlgroup/odl.git@master
+      - omegaconf==2.3.0
+      - pandas==2.1.1
+      - runstats==2.0.0
