@@ -44,7 +44,7 @@ class GradientFunction(nn.Module):
   
 
 class LEARN_pl(pl.LightningModule):
-    def __init__(self, n_iterations, radon):
+    def __init__(self, n_iterations, radon,num_view):
         super(LEARN_pl, self).__init__()
         self.save_hyperparameters()
         self.gradient_list = nn.ModuleList([GradientFunction() for _ in range(n_iterations)])
@@ -54,8 +54,7 @@ class LEARN_pl(pl.LightningModule):
         self.ssim = StructuralSimilarityIndexMeasure()
         self.psnr = PeakSignalNoiseRatio()
         self.rmse = RootMeanSquaredErrorUsingSlidingWindow()
-        
-        radon_curr, fbp_curr = radon(num_view=96)
+        radon_curr, fbp_curr = radon(num_view=num_view)
         
         self.forward_module = radon_curr
         self.backward_module = fbp_curr
@@ -83,8 +82,7 @@ class LEARN_pl(pl.LightningModule):
         phantom, fbp_u, sino_noisy = train_batch
         x_t = fbp_u
         y = sino_noisy
-        x_reconstructed = self.forward(x_t, y)
-        
+        x_reconstructed = self.forward(x_t, y)        
         loss = nn.functional.mse_loss(phantom, x_reconstructed)
 
         self.log('train_loss', loss)

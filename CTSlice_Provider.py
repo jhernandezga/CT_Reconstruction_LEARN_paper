@@ -61,7 +61,7 @@ class CTSlice_Provider(Dataset):
     angles=np.array(num_view).astype(int)
     angle_partition=odl.uniform_partition(start_ang, end_ang, angles)
     detector_partition=odl.uniform_partition(-480, 480, num_detectors)
-     
+         
     geometry=odl.tomo.FanBeamGeometry(angle_partition, detector_partition, src_radius=600, det_radius=290)
     #geometry=odl.tomo.geometry.conebeam.FanBeamGeometry(angle_partition, detector_partition, src_radius=600, det_radius=290)
     operator=odl.tomo.RayTransform(space, geometry, impl='astra_cuda')
@@ -129,7 +129,6 @@ class CTSlice_Provider(Dataset):
     #Without noise: 
     #sino_noisy = sino_noisy
     fbp_u=self.fbp_curr(sino_noisy)
-    
     #fbp_u=self.fbp_curr(sino)
     phantom=phantom   #.type(torch.DoubleTensor)
     fbp_u=fbp_u  #.type(torch.DoubleTensor)
@@ -137,6 +136,8 @@ class CTSlice_Provider(Dataset):
     #sino_noisy=sino_noisy#.type(torch.DoubleTensor)
     if self.transform:
       phantom = self.transform(phantom)
+      fbp_u= self.transform(fbp_u)
+      
 
     return phantom, fbp_u, sino
 

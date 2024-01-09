@@ -27,7 +27,6 @@ class CTDataModule(pl.LightningDataModule):
         super().__init__()
         self.input_size = input_size
         self.transform = transforms.Compose([
-                                transforms.ToTensor(),
                                 transforms.Resize(self.input_size)
                         ])
         self.data_dir = data_dir

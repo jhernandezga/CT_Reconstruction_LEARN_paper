@@ -1,4 +1,6 @@
 import pytorch_lightning as pl
+from model import LEARN_pl
+import pytorch_lightning as pl
 from pytorch_lightning import LightningDataModule, LightningModule, Trainer
 import torch
 from CTSlice_Provider import CTSlice_Provider
@@ -9,16 +11,14 @@ from model import GradientFunction
 import matplotlib.pyplot as plt
 from torch.utils.data import DataLoader
 import torch.multiprocessing as mp
-
+import torchvision.transforms as transforms
 import odl
 import numpy as np
 from odl.contrib import torch as odl_torch
+import matplotlib.pyplot as plt
 
 
-#mp.set_start_method('spawn')
-#torch.manual_seed(42)
-
-num_view = 64
+num_view = 96
 input_size = 256
 
 def radon_transform(num_view=num_view, start_ang=0, end_ang=2*np.pi, num_detectors=800):
@@ -47,16 +47,24 @@ def radon_transform(num_view=num_view, start_ang=0, end_ang=2*np.pi, num_detecto
 
 path_dir ="AAPM-Mayo-CT-Challenge/"
 #torch.cuda.empty_cache()
-
+transform = transforms.Compose([transforms.Resize(input_size)])
 n_iterations = 10
-batch_size = 2
 
-tb_logger = pl.loggers.TensorBoardLogger("LEARN_Training_all")
-model = LEARN_pl(n_iterations=n_iterations, radon=radon_transform,num_view=num_view)
-dm = CTDataModule(data_dir=path_dir, batch_size=batch_size, num_view=num_view, input_size=input_size)
+model = LEARN_pl.load_from_checkpoint("LEARN_Training_all/lightning_logs/version_1/checkpoints/epoch=2-step=3381.ckpt")
+dataset = CTSlice_Provider(path_dir, num_view, input_size, transform=transform)
+model.eval()
 
-#dm.setup(stage="fit")
-#batch = dm.train_dataloader().__iter__().__next__()
+phantom, fbp_u, sino = dataset[0]
+y_hat = model(fbp_u,sino)
 
-trainer = pl.Trainer(accelerator='gpu',max_epochs=3, logger=tb_logger,enable_checkpointing=True,)
-trainer.fit(model, dm)
+plt.subplot(1, 2, 1)
+plt.imshow(phantom, cmap='bone')
+plt.title('Phantom')
+
+plt.subplot(1, 2, 2)
+plt.imshow(y_hat, cmap='bone')
+plt.title('y_hat')
+
+plt.show()
+
+

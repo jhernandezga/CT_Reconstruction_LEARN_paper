@@ -22,7 +22,7 @@ data_slice=(data_slice-np.min(data_slice))/(np.max(data_slice)-np.min(data_slice
 
 phantom=torch.from_numpy(data_slice).unsqueeze(0).type(torch.FloatTensor)
 
-def _radon_transform(num_view=64, start_ang=0, end_ang=2*np.pi, num_detectors=800):
+def _radon_transform(num_view=96, start_ang=0, end_ang=2*np.pi, num_detectors=800):
     # the function is used to generate fp, bp, fbp functions
     # the physical parameters is set as MetaInvNet and EPNet
     xx=200
