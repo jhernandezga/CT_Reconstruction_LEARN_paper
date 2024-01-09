@@ -23,26 +23,24 @@ from CTSlice_Provider import CTSlice_Provider
 
 
 class CTDataModule(pl.LightningDataModule):
-    def __init__(self,data_dir, batch_size):
+    def __init__(self,data_dir, batch_size,num_view=64,input_size = 256):
         super().__init__()
+        self.input_size = input_size
         self.transform = transforms.Compose([
                                 transforms.ToTensor(),
-                                 
-                        
+                                transforms.Resize(self.input_size)
                         ])
         self.data_dir = data_dir
         self.batch_size = batch_size
+        self.num_view = num_view
 
     def setup(self, stage):
         # First stage is 'fit' (or None)
         if stage == "fit" or stage is None:
             # We create a validation split to watch the training.
-            ct_train_dataset = CTSlice_Provider(self.data_dir)
-         
-            self.train_size = int(0.8 * len(ct_train_dataset))
-            self.valid_size = len(ct_train_dataset) - self.train_size
-            self.ct_train, self.ct_valid =  torch.utils.data.random_split(ct_train_dataset, [self.train_size, self.valid_size])
-
+            self.ct_train = CTSlice_Provider(self.data_dir, num_view=self.num_view, input_size=self.input_size, transform=self.transform)
+            self.ct_valid = CTSlice_Provider(self.data_dir,test=True, num_view=self.num_view, input_size=self.input_size, transform=self.transform)
+        
     def train_dataloader(self):
         return DataLoader(self.ct_train, batch_size=self.batch_size, shuffle=True,num_workers=0)
 

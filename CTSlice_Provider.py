@@ -22,35 +22,38 @@ from odl.tomo.backends import (
 os.environ['KMP_DUPLICATE_LIB_OK'] = 'TRUE'
 
 class CTSlice_Provider(Dataset):
-  def __init__(self, base_path, poission_level=5e6, gaussian_level=0.05, num_view=96, transform = None, test = False):
+
+  def __init__(self, base_path, poission_level=5e6, gaussian_level=0.05, num_view=64, transform = None, test = False, input_size =256):
     self.base_path=base_path
     #self.slices_path=glob(os.path.join(self.base_path,'*/*.dcm'))
     patients_training = ["L067","L096","L109","L143","L192","L286","L291","L310","L096"]
-    patients_test = ["L333"]
+    patients_test = ["L506"]
     
     paths_training = []
     paths_test = []
-    
-    for patient_id in patients_training:
-        pattern = base_path + f"{patient_id}_FD_3_1.CT.*.*.*.*.*.*.*.*.*.IMA"
-        paths_training.append(pattern)
-  
-    for patient_id in patients_test:
-        pattern = base_path + f"{patient_id}_FD_3_1.CT.*.*.*.*.*.*.*.*.*.IMA"
-        paths_test.append(pattern)
+    self.input_size = input_size
     
     if test:
-      self.slices_path=glob(base_path  + "L333_FD_3_1.CT.*.*.*.*.*.*.*.*.*.IMA")
-    else:
-      self.slices_path=glob(base_path  + "L333_FD_3_1.CT.*.*.*.*.*.*.*.*.*.IMA")
+      for patient_id in patients_test:
+        pattern = glob(base_path + "Validation/L506/full_3mm/"+f"{patient_id}_FD_3_1.CT.*.*.*.*.*.*.*.*.*.IMA")
+        paths_test.append(pattern)
       
+      self.slices_path = [item for sublist in paths_test for item in sublist] 
+
+    else:
+        for patient_id in patients_training:
+          pattern = glob(base_path +"Training/full_3mm/"+f"{patient_id}_FD_3_1.CT.*.*.*.*.*.*.*.*.*.IMA")
+          paths_training.append(pattern)
+        self.slices_path = [item for sublist in paths_training for item in sublist]
+          
     self.radon_full, self.iradon_full, self.fbp_full, self.op_norm_full=self._radon_transform(num_view=360)
     self.radon_curr, self.iradon_curr, self.fbp_curr, self.op_norm_curr=self._radon_transform(num_view=num_view)
     self.poission_level=poission_level
     self.gaussian_level=gaussian_level
     self.num_view=num_view
+    self.transform = transform
     
-  def _radon_transform(self, num_view=96, start_ang=0, end_ang=2*np.pi, num_detectors=800):
+  def _radon_transform(self, num_view= 96, start_ang=0, end_ang=2*np.pi, num_detectors=800):
     # the function is used to generate fp, bp, fbp functions
     # the physical parameters is set as MetaInvNet and EPNet
     xx=200
@@ -58,13 +61,14 @@ class CTSlice_Provider(Dataset):
     angles=np.array(num_view).astype(int)
     angle_partition=odl.uniform_partition(start_ang, end_ang, angles)
     detector_partition=odl.uniform_partition(-480, 480, num_detectors)
+     
     geometry=odl.tomo.FanBeamGeometry(angle_partition, detector_partition, src_radius=600, det_radius=290)
     #geometry=odl.tomo.geometry.conebeam.FanBeamGeometry(angle_partition, detector_partition, src_radius=600, det_radius=290)
     operator=odl.tomo.RayTransform(space, geometry, impl='astra_cuda')
 
     op_norm=odl.operator.power_method_opnorm(operator)
     op_norm=torch.from_numpy(np.array(op_norm*2*np.pi)).double().cuda()
-
+    
     op_layer=odl_torch.operator.OperatorModule(operator)
     op_layer_adjoint=odl_torch.operator.OperatorModule(operator.adjoint)
     fbp=odl.tomo.fbp_op(operator, filter_type='Ram-Lak', frequency_scaling=0.9)*np.sqrt(2)
@@ -107,30 +111,32 @@ class CTSlice_Provider(Dataset):
     # the following part code is used to randomly choose sinograms to satisfy the sparse-view requeirement
         
     # add poission noise
-    #intensityI0=self.poission_level
-    #scale_value=torch.from_numpy(np.array(intensityI0).astype(float))
-    #normalized_sino=torch.exp(-sino/sino.max())
-    #th_data=np.random.poisson(scale_value*normalized_sino)
-    #sino_noisy=-torch.log(torch.from_numpy(th_data)/scale_value)
-    #sino_noisy = sino_noisy*sino.max()
+    intensityI0=self.poission_level
+    scale_value=torch.from_numpy(np.array(intensityI0).astype(float))
+    normalized_sino=torch.exp(-sino/sino.max())
+    th_data=np.random.poisson(scale_value*normalized_sino)
+    sino_noisy=-torch.log(torch.from_numpy(th_data)/scale_value)
+    sino_noisy = sino_noisy*sino.max()
 
     # add Gaussian noise
-    #noise_std=self.gaussian_level
-    #noise_std=np.array(noise_std).astype(float)
-    #nx,ny=np.array(self.num_view).astype(int),np.array(800).astype(int)
-    #noise = noise_std*np.random.randn(nx,ny)
-    #noise = torch.from_numpy(noise)
-    #sino_noisy = sino_noisy + noise
+    noise_std=self.gaussian_level
+    noise_std=np.array(noise_std).astype(float)
+    nx,ny=np.array(self.num_view).astype(int),np.array(800).astype(int)
+    noise = noise_std*np.random.randn(nx,ny)
+    noise = torch.from_numpy(noise)
+    sino_noisy = sino_noisy + noise
     
     #Without noise: 
     #sino_noisy = sino_noisy
-    #fbp_u=self.fbp_curr(sino_noisy)
+    fbp_u=self.fbp_curr(sino_noisy)
     
-    fbp_u=self.fbp_curr(sino)
+    #fbp_u=self.fbp_curr(sino)
     phantom=phantom   #.type(torch.DoubleTensor)
     fbp_u=fbp_u  #.type(torch.DoubleTensor)
     
     #sino_noisy=sino_noisy#.type(torch.DoubleTensor)
+    if self.transform:
+      phantom = self.transform(phantom)
 
     return phantom, fbp_u, sino
 

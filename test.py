@@ -22,7 +22,7 @@ data_slice=(data_slice-np.min(data_slice))/(np.max(data_slice)-np.min(data_slice
 
 phantom=torch.from_numpy(data_slice).unsqueeze(0).type(torch.FloatTensor)
 
-def _radon_transform(num_view=96, start_ang=0, end_ang=2*np.pi, num_detectors=800):
+def _radon_transform(num_view=64, start_ang=0, end_ang=2*np.pi, num_detectors=800):
     # the function is used to generate fp, bp, fbp functions
     # the physical parameters is set as MetaInvNet and EPNet
     xx=200
@@ -44,7 +44,7 @@ def _radon_transform(num_view=96, start_ang=0, end_ang=2*np.pi, num_detectors=80
 
     return op_layer, op_layer_adjoint, op_layer_fbp, op_norm
 
-radon_curr, iradon_curr, fbp_curr, op_norm_curr = _radon_transform(num_view=96)
+radon_curr, iradon_curr, fbp_curr, op_norm_curr = _radon_transform(num_view=64)
 
 sino=radon_curr(phantom)
 
@@ -62,7 +62,7 @@ sino_noisy = sino_noisy*sino.max()
  # add Gaussian noise
 noise_std=gaussian_level
 noise_std=np.array(noise_std).astype(np.float64)
-nx,ny=np.array(96).astype(np.int64),np.array(800).astype(np.int64)
+nx,ny=np.array(64).astype(np.int64),np.array(800).astype(np.int64)
 noise = noise_std*np.random.randn(nx,ny)
 noise = torch.from_numpy(noise)
 sino_noisy = sino_noisy + noise

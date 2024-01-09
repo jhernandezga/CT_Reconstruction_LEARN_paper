@@ -59,6 +59,8 @@ class LEARN_pl(pl.LightningModule):
         
         self.forward_module = radon_curr
         self.backward_module = fbp_curr
+        
+        self.grid = None
     
     def forward(self,x_t,y):
         x_t = x_t
@@ -106,9 +108,12 @@ class LEARN_pl(pl.LightningModule):
         self.log('val_psnr', psnr_p)
         self.log('val_rmse', rmse_p)
         
-        grid = torchvision.utils.make_grid(x_reconstructed)
-        self.logger.experiment.add_image("generated_images", grid, self.current_epoch)
-        
+        self.grid = torchvision.utils.make_grid(x_reconstructed)
+    
+    def on_validation_epoch_end(self):
+        self.logger.experiment.add_image("generated_images", self.grid, self.current_epoch)
+    
+    
     
     
   

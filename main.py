@@ -18,18 +18,20 @@ from odl.contrib import torch as odl_torch
 #mp.set_start_method('spawn')
 #torch.manual_seed(42)
 
+num_view = 96
+input_size = 256
 
-def radon_transform(num_view=96, start_ang=0, end_ang=2*np.pi, num_detectors=800):
+def radon_transform(num_view=num_view, start_ang=0, end_ang=2*np.pi, num_detectors=800):
         # the function is used to generate fp, bp, fbp functions
         # the physical parameters is set as MetaInvNet and EPNet
         xx=200
-        space=odl.uniform_discr([-xx, -xx], [xx, xx], [512,512], dtype='float32')
+        space=odl.uniform_discr([-xx, -xx], [xx, xx], [input_size,input_size], dtype='float32')
         angles=np.array(num_view).astype(int)
         angle_partition=odl.uniform_partition(start_ang, end_ang, angles)
         detector_partition=odl.uniform_partition(-480, 480, num_detectors)
         geometry=odl.tomo.FanBeamGeometry(angle_partition, detector_partition, src_radius=600, det_radius=290)
         #geometry=odl.tomo.geometry.conebeam.FanBeamGeometry(angle_partition, detector_partition, src_radius=600, det_radius=290)
-        operator=odl.tomo.RayTransform(space, geometry)
+        operator=odl.tomo.RayTransform(space, geometry, impl='astra_cuda')
 
         #op_norm=odl.operator.power_method_opnorm(operator)
         #op_norm=torch.from_numpy(np.array(op_norm*2*np.pi)).double().cuda()
@@ -42,15 +44,15 @@ def radon_transform(num_view=96, start_ang=0, end_ang=2*np.pi, num_detectors=800
         return op_layer, op_layer_fbp
 
 
-path_dir ="AAPM-Mayo-CT-Challenge/L333/full_3mm/"
+path_dir ="AAPM-Mayo-CT-Challenge/"
 #torch.cuda.empty_cache()
 
-n_iterations = 5
-batch_size = 1
+n_iterations = 10
+batch_size = 4
 
-tb_logger = pl.loggers.TensorBoardLogger("LEARN_Training")
+tb_logger = pl.loggers.TensorBoardLogger("LEARN_Training_all")
 model = LEARN_pl(n_iterations=n_iterations, radon=radon_transform)
-dm = CTDataModule(data_dir=path_dir, batch_size=batch_size)
+dm = CTDataModule(data_dir=path_dir, batch_size=batch_size, num_view=num_view, input_size=input_size)
 
 #dm.setup(stage="fit")
 #batch = dm.train_dataloader().__iter__().__next__()

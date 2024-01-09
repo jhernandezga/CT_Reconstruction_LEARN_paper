@@ -9,11 +9,11 @@ from odl.tomo.backends import (
 
 print("Astra CUDA available", ASTRA_CUDA_AVAILABLE)
 
-path_dir ="AAPM-Mayo-CT-Challenge/L333/full_3mm/"
+path_dir ="AAPM-Mayo-CT-Challenge/"
 
 dataset = CTSlice_Provider(path_dir,num_view=64)
 
-phantom, fbp_u, sino_noisy = dataset[0]
+phantom, fbp_u, sino_noisy = dataset[1000]
 
 phantom = phantom.permute(1, 2, 0)
 fbp_u = fbp_u.permute(1, 2, 0)
