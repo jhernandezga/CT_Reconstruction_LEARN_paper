@@ -6,15 +6,9 @@ channels:
   - nvidia
   - conda-forge
   - astra-toolbox/label/dev
-dependencies:
-  - python
-  - pytorch::pytorch 
-  - pytorch::torchvision
-  - pytorch-cuda=11.8
-  - pytorch-lightning==2.0.7   
+dependencies:   
   - tensorboard
   - wandb
-  - conda  
   - astra-toolbox  
   - numpy
   - h5py
@@ -27,8 +21,7 @@ dependencies:
   - timm  
   - rich
   - pkg-config
-  - loguru
-  - matplotlib  
+  - loguru  
   - pip
   - pip: 
       - colorlog==6.7.0

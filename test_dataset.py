@@ -13,6 +13,7 @@ path_dir ="AAPM-Mayo-CT-Challenge/"
 
 dataset = CTSlice_Provider(path_dir,num_view=64)
 
+print(len(dataset))
 phantom, fbp_u, sino_noisy = dataset[1000]
 
 phantom = phantom.permute(1, 2, 0)

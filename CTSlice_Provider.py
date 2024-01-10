@@ -11,7 +11,7 @@ from PIL import Image
 from glob import glob
 from scipy import ndimage
 from torch.utils.data import Dataset, DataLoader
-import SimpleITK as sitk
+#import SimpleITK as sitk
 from odl.contrib import torch as odl_torch
 import os
 
@@ -144,13 +144,13 @@ class CTSlice_Provider(Dataset):
   def __len__(self):
     return len(self.slices_path)
     
-if __name__=='__main__':
-  print('Reading CT slices Beginning')
-  aapm_dataset=CTSlice_Provider('AAPM-Mayo-CT-Challenge/L333/full_3mm/')
-  aapm_dataloader=DataLoader(dataset=aapm_dataset, batch_size=2, shuffle=True)
-  for index, (gt, fbpu, projs_noisy) in enumerate(aapm_dataloader):
-    if index==1:
-      img_save=sitk.GetImageFromArray(fbpu)
-      print(gt.shape)
-      print(fbpu.shape)
-      print(projs_noisy.shape)
+#if __name__=='__main__':
+ # print('Reading CT slices Beginning')
+  #aapm_dataset=CTSlice_Provider('AAPM-Mayo-CT-Challenge/L333/full_3mm/')
+  #aapm_dataloader=DataLoader(dataset=aapm_dataset, batch_size=2, shuffle=True)
+  #for index, (gt, fbpu, projs_noisy) in enumerate(aapm_dataloader):
+   # if index==1:
+      #img_save=sitk.GetImageFromArray(fbpu)
+    #  print(gt.shape)
+     # print(fbpu.shape)
+      #print(projs_noisy.shape)
