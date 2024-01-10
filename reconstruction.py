@@ -30,20 +30,21 @@ n_iterations = 10
 
 dataset = CTSlice_Provider(path_dir, num_view = num_view, input_size=input_size, transform=transform,test=True)
 
+print(len(dataset))
 
-phantom, fbp_u, sino = dataset[3]
+phantom, fbp_u, sino = dataset[142]
 
 initial = torch.rand(1,256, 256)
 
 
 
-model = LEARN_pl.load_from_checkpoint("LEARN_Training_all/lightning_logs/version_5/checkpoints/epoch=9-step=1410.ckpt")
+model = LEARN_pl.load_from_checkpoint("LEARN_Training_all/lightning_logs/version_7/checkpoints/epoch=9-step=1410.ckpt")
 model.eval()
 model.to('cpu')
 y_hat = model(initial,sino)
 
 ssim = StructuralSimilarityIndexMeasure()
-ssim_p = ssim(y_hat.unsqueeze(0), phantom.unsqueeze(0))
+ssim_p = ssim(fbp_u.unsqueeze(0), phantom.unsqueeze(0))
 print(ssim_p)
 
 # Plotting the images
