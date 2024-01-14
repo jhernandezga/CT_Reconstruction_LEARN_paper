@@ -26,3 +26,7 @@ This project is licensed under the MIT License.
 
 ## Contact
 For any queries or support, please contact jhernandezga@unal.edu.co.
+
+## Overview results
+![1](https://github.com/jhernandezga/CT_Reconstruction_LEARN_paper/assets/57245076/91212ffe-50de-4e2c-a628-7e74f3f0f807)
+![2](https://github.com/jhernandezga/CT_Reconstruction_LEARN_paper/assets/57245076/5d29d969-df3e-4b63-9efc-f1fa3e0b67fc)
