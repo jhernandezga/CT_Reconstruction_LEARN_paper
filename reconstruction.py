@@ -24,6 +24,7 @@ input_size = 256
 
 path_dir ="AAPM-Mayo-CT-Challenge/"
 #torch.cuda.empty_cache()
+
 transform = transforms.Compose([transforms.Resize(input_size)])
 n_iterations = 10
 
@@ -32,19 +33,17 @@ dataset = CTSlice_Provider(path_dir, num_view = num_view, input_size=input_size,
 
 print(len(dataset))
 
-phantom, fbp_u, sino = dataset[142]
+phantom, fbp_u, sino = dataset[4]
 
 initial = torch.rand(1,256, 256)
-
-
 
 model = LEARN_pl.load_from_checkpoint("LEARN_Training_all/lightning_logs/version_7/checkpoints/epoch=9-step=1410.ckpt")
 model.eval()
 model.to('cpu')
-y_hat = model(initial,sino)
+y_hat = model(fbp_u,sino)
 
 ssim = StructuralSimilarityIndexMeasure()
-ssim_p = ssim(fbp_u.unsqueeze(0), phantom.unsqueeze(0))
+ssim_p = ssim(y_hat.unsqueeze(0), phantom.unsqueeze(0))
 print(ssim_p)
 
 # Plotting the images
@@ -60,7 +59,7 @@ plt.title('Downsampled\n sinogram')
 plt.axis('off')
 plt.subplot(1, 3, 2)
 plt.imshow(y_hat.detach().permute(1,2,0), cmap='bone')
-plt.title('Reconstructed Scan')
+plt.title('Reconstructed Scan SSIM: {:.02f}'.format(ssim_p.detach().item()))
 plt.axis('off')
 plt.subplot(1, 3, 3)
 plt.imshow(phantom.permute(1,2,0).detach(), cmap='bone')

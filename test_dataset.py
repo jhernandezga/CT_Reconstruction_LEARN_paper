@@ -11,10 +11,10 @@ print("Astra CUDA available", ASTRA_CUDA_AVAILABLE)
 
 path_dir ="AAPM-Mayo-CT-Challenge/"
 
-dataset = CTSlice_Provider(path_dir,num_view=64)
+dataset = CTSlice_Provider(path_dir,num_view=64, test=True)
 
 print(len(dataset))
-phantom, fbp_u, sino_noisy = dataset[1000]
+phantom, fbp_u, sino_noisy = dataset[10]
 
 phantom = phantom.permute(1, 2, 0)
 fbp_u = fbp_u.permute(1, 2, 0)

@@ -83,10 +83,11 @@ class LEARN_pl(pl.LightningModule):
         x_t = fbp_u
         y = sino_noisy
         initial = torch.rand(y.shape[0],1,256, 256).cuda()
-        x_reconstructed = self.forward(initial, y)        
+        x_reconstructed = self.forward(x_t, y)        
         loss = nn.functional.mse_loss(phantom, x_reconstructed)
 
-        self.log('train_loss', loss)
+        #self.log('train_loss', loss)
+        self.logger.experiment.add_scalars('loss', {'train': loss},self.global_step) 
         return loss
 
     def validation_step(self, val_batch, batch_idx):
@@ -95,7 +96,7 @@ class LEARN_pl(pl.LightningModule):
         x_t = fbp_u
         y = sino_noisy
         initial = torch.rand(y.shape[0],1,256, 256).cuda()
-        x_reconstructed = self.forward(initial, y)
+        x_reconstructed = self.forward(x_t, y)
         
         loss = nn.functional.mse_loss(phantom, x_reconstructed)
         ssim_p = self.ssim(x_reconstructed, phantom)
@@ -103,12 +104,37 @@ class LEARN_pl(pl.LightningModule):
         rmse_p = self.rmse(x_reconstructed, phantom)
         
         
-        self.log('val_loss', loss)
+        #self.log('val_loss', loss)
+        self.logger.experiment.add_scalars('loss', {'validation': loss},self.global_step)
         self.log('val_ssim', ssim_p)
         self.log('val_psnr', psnr_p)
         self.log('val_rmse', rmse_p)
         
         self.grid = torchvision.utils.make_grid(x_reconstructed)
+        
+    def test_step(self, batch, batch_idx):
+        phantom, fbp_u, sino_noisy = batch
+        x_t = fbp_u
+        y = sino_noisy
+        initial = torch.rand(y.shape[0],1,256, 256).cuda()
+        x_reconstructed = self.forward(x_t, y)
+        
+        loss = nn.functional.mse_loss(phantom, x_reconstructed)
+        ssim_p = self.ssim(x_reconstructed, phantom)
+        psnr_p = self.psnr(x_reconstructed, phantom)
+        rmse_p = self.rmse(x_reconstructed, phantom)
+        
+        test_out = {
+            "SSIM": ssim_p,
+            "PSNR": psnr_p,
+            "RMSE": rmse_p
+            }
+        
+        self.log('test_loss', loss)
+        self.log('test_ssim', ssim_p)
+        self.log('test_psnr', psnr_p)
+        self.log('test_rmse', rmse_p)
+        return test_out   
     
     def on_validation_epoch_end(self):
         self.logger.experiment.add_image("generated_images", self.grid, self.current_epoch,)

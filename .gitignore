@@ -4,4 +4,11 @@ odl/
 odlcuda/
 Miniconda3-latest-Linux-x86_64.sh
 LEARN_Training_all/
-
+lightning_logs/
+1.png
+2.png
+fbpnoise.png
+init1.png
+init2.png
+noise1_fbp.png
+NOISE1.png

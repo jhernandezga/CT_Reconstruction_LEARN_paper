@@ -14,7 +14,7 @@ from torch.utils.data import Dataset, DataLoader
 #import SimpleITK as sitk
 from odl.contrib import torch as odl_torch
 import os
-
+import math
 
 from odl.tomo.backends import (
     ASTRA_AVAILABLE, ASTRA_CUDA_AVAILABLE, SKIMAGE_AVAILABLE)
@@ -23,7 +23,7 @@ os.environ['KMP_DUPLICATE_LIB_OK'] = 'TRUE'
 
 class CTSlice_Provider(Dataset):
 
-  def __init__(self, base_path, poission_level=5e6, gaussian_level=0.05, num_view=64, transform = None, test = False, input_size =256):
+  def __init__(self, base_path, poission_level=5e6, gaussian_level=0.05, num_view=64, transform = None, test = False, input_size =256, num_select = -1):
     self.base_path=base_path
     #self.slices_path=glob(os.path.join(self.base_path,'*/*.dcm'))
     patients_training = ["L067","L096","L109","L143","L192","L286","L291","L310","L096"]
@@ -38,14 +38,25 @@ class CTSlice_Provider(Dataset):
         pattern = glob(base_path + "Validation/L506/full_3mm/"+f"{patient_id}_FD_3_1.CT.*.*.*.*.*.*.*.*.*.IMA")
         paths_test.append(pattern)
       
-      self.slices_path = [item for sublist in paths_test for item in sublist] 
+      if not(num_select == -1) :
+          for i in range(len(paths_test)):
+            subpaths = random.sample(paths_test[i], num_select)
+            paths_test[i] = subpaths
+  
+      self.slices_path = [item for sublist in paths_test for item in sublist]
 
     else:
         for patient_id in patients_training:
           pattern = glob(base_path +"Training/full_3mm/"+f"{patient_id}_FD_3_1.CT.*.*.*.*.*.*.*.*.*.IMA")
           paths_training.append(pattern)
+            
+        if not(num_select == -1) :
+          for i in range(len(paths_training)):
+            subpaths = random.sample(paths_training[i], num_select)
+            paths_training[i] = subpaths
+                
         self.slices_path = [item for sublist in paths_training for item in sublist]
-          
+        
     self.radon_full, self.iradon_full, self.fbp_full, self.op_norm_full=self._radon_transform(num_view=360)
     self.radon_curr, self.iradon_curr, self.fbp_curr, self.op_norm_curr=self._radon_transform(num_view=num_view)
     self.poission_level=poission_level
@@ -144,13 +155,3 @@ class CTSlice_Provider(Dataset):
   def __len__(self):
     return len(self.slices_path)
     
-#if __name__=='__main__':
- # print('Reading CT slices Beginning')
-  #aapm_dataset=CTSlice_Provider('AAPM-Mayo-CT-Challenge/L333/full_3mm/')
-  #aapm_dataloader=DataLoader(dataset=aapm_dataset, batch_size=2, shuffle=True)
-  #for index, (gt, fbpu, projs_noisy) in enumerate(aapm_dataloader):
-   # if index==1:
-      #img_save=sitk.GetImageFromArray(fbpu)
-    #  print(gt.shape)
-     # print(fbpu.shape)
-      #print(projs_noisy.shape)
